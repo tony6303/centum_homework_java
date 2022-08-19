@@ -1,0 +1,321 @@
+package com.uni.member.model.dao;
+
+import static com.uni.common.JDBCTemplate.*;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import com.uni.member.model.dto.Member;
+
+/* 1.Connection 객체연결하기 
+ * 2.Statement 객체 생성하기 
+ * 3.ResultSet 객체 생성하기 
+ * 4.Sql작성하기 
+ * 5.ResultSet  결과담기 
+ * 6.list 에 객체 하나씩 담기 
+ * 7.close 하기 (자원반납 - 생성의 역순)
+ */
+
+/* DAO(Database Access Object) : 데이터베이스 접근용 객체
+ *  => CRUD 연산을 담당하는 메소드들의 집합으로 이루어진 클래스이다.
+ *  Create: 삽입 (Insert)
+ *  Read : 조회 (Select)
+ *  Update: 수정 (Update)
+ *  Delete: 삭제(Delete)
+ *  */
+
+public class MemberDao {
+	
+	Properties prop = new Properties();
+	
+
+	public ArrayList<Member> selectAll(Connection conn) {
+		ArrayList<Member> list = null;
+
+		PreparedStatement pstmt = null;
+		ResultSet rset = null; // SELECT 후 결과값 받아올 객체
+		
+
+		try {
+			prop.load(new FileReader("resources/query.properties"));
+			String sql = prop.getProperty("selectAll");  // SELECT * FROM MEMBER
+			
+			// 3. 쿼리문을 실행 할 statement 객체 생성
+			pstmt = conn.prepareStatement(sql);
+
+			// 4. 쿼리문을 전송, 실행한 결과를 ResultSet(자료형 이름임) 으로 받기
+			rset = pstmt.executeQuery();
+
+			// 5. 받은 결과값을 객체에 옮겨서 저장하기
+			list = new ArrayList<Member>();
+
+			while (rset.next()) {
+				Member m = new Member();
+				m.setUserId(rset.getString("userId")); // 컬럼의 명을 입력
+				m.setPassword(rset.getString("password"));
+				m.setUserName(rset.getString("userName"));
+				m.setGender(rset.getString("gender"));
+				m.setAge(rset.getInt("age"));
+				m.setEmail(rset.getString("email"));
+				m.setPhone(rset.getString("phone"));
+				m.setAddress(rset.getString("address"));
+				m.setHobby(rset.getString("hobby"));
+				m.setEnrollDate(rset.getDate("enrollDate"));
+
+				list.add(m); // ArrayList<Member> 에 set,get 작업을 열심히 끝낸 객체 m 을 하나씩 차곡차곡 추가한다
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+//			close(conn);
+//			close(rset);
+//			close(pstmt);
+		} // finally 끝
+		return list;
+	} // selectAll 끝
+
+	public Member selectOne(Connection conn, String inputMemberId) {
+		Member m = null;
+
+		PreparedStatement pstmt = null; // pstmt 작성 pstmt 작성 pstmt 작성 pstmt 작성
+
+		ResultSet rset = null; // SELECT 후 결과값 받아올 객체
+
+
+		try {
+			prop.load(new FileReader("resources/query.properties"));
+			String sql = prop.getProperty("selectOne");  // SELECT * FROM MEMBER WHERE userId = ?
+			
+			// 3. 쿼리문을 실행 할 statement 객체 생성
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, inputMemberId); // n번째 ?에 매개변수를 넣는다.
+
+			// 4. 쿼리문을 전송, 실행한 결과를 resultset(자료형 이름임) 으로 받기
+
+			rset = pstmt.executeQuery();
+
+			if (rset.next()) {
+				m = new Member();
+				m.setUserId(rset.getString("userId")); // 컬럼의 명을 입력
+				m.setPassword(rset.getString("password"));
+				m.setUserName(rset.getString("userName"));
+				m.setGender(rset.getString("gender"));
+				m.setAge(rset.getInt("age"));
+				m.setEmail(rset.getString("email"));
+				m.setPhone(rset.getString("phone"));
+				m.setAddress(rset.getString("address"));
+				m.setHobby(rset.getString("hobby"));
+				m.setEnrollDate(rset.getDate("enrollDate"));
+			}
+
+		} catch (SQLException e) {
+
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+//			close(conn);
+//			close(rset);
+//			close(pstmt);
+		} // finally 끝
+
+		return m;
+	} // selectOne 끝
+	
+	public List<Member> selectByName(Connection conn, String memberName) {
+		ArrayList<Member> list = null;
+
+		PreparedStatement pstmt = null;
+		ResultSet rset = null;// Select 한후 결과값 받아올 객체
+
+		String sql = "SELECT * FROM MEMBER WHERE USERNAME LIKE '%" + memberName + "%'";// 자동으로 세미콜론을 붙여 실행되므로 붙히지않는다
+
+		try {
+			pstmt = conn.prepareStatement(sql);
+
+			rset = pstmt.executeQuery();
+
+			list = new ArrayList<Member>();
+
+			while (rset.next()) {
+
+				Member m = new Member();
+				m.setUserId(rset.getString("USERID"));
+				m.setPassword(rset.getString("PASSWORD"));
+				m.setUserName(rset.getString("USERNAME"));
+				m.setGender(rset.getString("GENDER"));
+				m.setAge(rset.getInt("AGE"));
+				m.setEmail(rset.getString("EMAIL"));
+				m.setPhone(rset.getString("PHONE"));
+				m.setAddress(rset.getString("ADDRESS"));
+				m.setHobby(rset.getString("HOBBY"));
+				m.setEnrollDate(rset.getDate("ENROLLDATE"));
+
+				list.add(m);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {// 자원반납의 순서는 생성의 역순이다
+			close(conn);
+			close(rset);
+			close(pstmt);
+		}
+
+		return list;
+	}  //  selectByName 끝
+
+	public int insertMember(Connection conn, Member m) {
+
+		int result = 0;
+		PreparedStatement pstmt = null;
+
+//	      System.out.println(sql);
+
+		try {
+			prop.load(new FileReader("resources/query.properties"));
+			String sql = prop.getProperty("insertMember");
+//			String sql = "INSERT INTO MEMBER VALUES(?,?,?,?,?,?,?,?,?,sysdate)";
+
+			pstmt = conn.prepareStatement(sql);
+
+			pstmt.setString(1, m.getUserId());
+			pstmt.setString(2, m.getPassword());
+			pstmt.setString(3, m.getUserName());
+			pstmt.setString(4, m.getGender());
+			pstmt.setInt(5, m.getAge());
+			pstmt.setString(6, m.getEmail());
+			pstmt.setString(7, m.getPhone());
+			pstmt.setString(8, m.getAddress());
+			pstmt.setString(9, m.getHobby());
+
+			conn.setAutoCommit(false);
+			result = pstmt.executeUpdate();// 처리한 행의 갯수를 리턴(int형) 처리결과가 0이면 0, 에러가나면 -1
+
+			if (result > 0) {
+				conn.commit();// 적용
+			}
+			else {
+				conn.rollback();// 되돌리기
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			close(conn);
+			close(pstmt);
+		}
+
+		System.out.println(result); // 0 , 1 , -1 뭐뜨는지 볼려고 넣었음
+		return result;
+	}  // insertMember 끝
+
+	public int updateMember(Member m) {
+		int result = 0;
+		Connection conn = null;// DB에 연결할 객체
+		Statement stmt = null;// 실행할 쿼리
+
+		String sql = "UPDATE MEMBER SET " + " PASSWORD = '" + m.getPassword() + "' , " + " EMAIL = '" + m.getEmail()
+				+ "' , " + " PHONE ='" + m.getPhone() + "' , " + " ADDRESS = '" + m.getAddress() + "' "
+				+ " WHERE USERID = '" + m.getUserId() + "'";
+
+		System.out.println(sql);
+
+		try {
+			Class.forName("oracle.jdbc.driver.OracleDriver");
+
+			System.out.println("드라이버 등록성공");
+
+			conn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:xe", "STUDENT", "STUDENT");
+			System.out.println("conn=" + conn);// 성공하면 connection 값, 실패하면 null값
+			stmt = conn.createStatement();
+			conn.setAutoCommit(false);
+			result = stmt.executeUpdate(sql);// 처리한 행의 갯수를 리턴(int형)
+
+			if (result > 0)
+				conn.commit();// 적용
+			else
+				conn.rollback();// 되돌리기
+
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return result;
+	}
+
+	public int deleteMember(String userId) {
+		int result = 0;
+
+		Connection conn = null;// DB에 연결할 객체
+		Statement stmt = null;// 실행할 쿼리
+
+		String sql = "DELETE FROM MEMBER WHERE USERID = '" + userId + "'";
+
+		System.out.println(sql);
+
+		try {
+			Class.forName("oracle.jdbc.driver.OracleDriver");
+
+			System.out.println("드라이버 등록성공");
+
+			conn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:xe", "student", "student");
+			System.out.println("conn=" + conn);// 성공하면 connection 값, 실패하면 null값
+			stmt = conn.createStatement();
+			conn.setAutoCommit(false);
+			result = stmt.executeUpdate(sql);// 처리한 행의 갯수를 리턴(int형)
+
+			if (result > 0)
+				conn.commit();// 적용
+			else
+				conn.rollback();// 되돌리기
+
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return result;
+	}
+
+}
